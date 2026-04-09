@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>标准对数视力表</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --blue-light: #eff6ff;
+  --text: #0f172a;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  height: 60px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.dist-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--blue-light);
+  padding: 7px 14px;
+  border-radius: 10px;
+}
+.dist-widget label { font-size: 13px; color: var(--blue); font-weight: 500; white-space: nowrap; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 130px; height: 4px;
+  background: #bfdbfe; border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  background: var(--blue); border-radius: 50%; cursor: pointer;
+  box-shadow: 0 1px 6px rgba(37,99,235,0.45);
+  transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:active { transform: scale(1.15); }
+
+.dist-num { font-size: 15px; font-weight: 700; color: var(--blue); min-width: 52px; white-space: nowrap; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: white; color: var(--text);
+  font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.btn:hover { border-color: var(--blue); color: var(--blue); }
+.btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+.btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); color: white; }
+
+/* ── Tab bar ── */
+.tab-bar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 24px;
+  gap: 4px;
+}
+.tab {
+  padding: 0 4px; height: 44px;
+  font-size: 14px; font-weight: 500; color: var(--text-muted);
+  background: none; border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.15s; margin-bottom: -1px; white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* ── Calibration banner ── */
+.calib-banner { background: #fefce8; border-bottom: 1px solid #fde68a; color: #713f12; font-size: 13px; padding: 9px 20px; text-align: center; display: none; }
+.calib-banner.show { display: block; }
+.calib-banner a { color: var(--blue); cursor: pointer; text-decoration: underline; }
+
+/* ── Eye chart ── */
+.chart-wrap { padding: 28px 20px 48px; display: flex; justify-content: center; }
+.chart-card {
+  background: var(--card); border-radius: 16px;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.09);
+  padding: 36px 32px 36px 0; overflow-x: auto;
+  min-width: min(700px, 92vw); width: min(900px, 92vw);
+}
+.chart-heading { text-align: center; font-size: 11px; letter-spacing: 3px; color: var(--text-muted); font-weight: 500; margin-bottom: 28px; text-transform: uppercase; padding-left: 68px; }
+.chart-row { display: flex; align-items: center; padding: 3px 0; }
+.row-label { width: 68px; flex-shrink: 0; text-align: right; padding-right: 18px; line-height: 1; }
+.va-log { font-size: 13px; font-weight: 600; color: #475569; }
+.va-snellen { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.optotypes { display: flex; align-items: center; justify-content: center; flex: 1; }
+.optotype { display: inline-flex; align-items: center; justify-content: center; font-family: 'Arial Black', 'Arial', sans-serif; font-weight: 900; color: #0f172a; line-height: 1; user-select: none; flex-shrink: 0; }
+.sep-row { height: 1px; background: #e2e8f0; margin: 6px 0 6px 68px; }
+.no-rows { padding: 48px 32px 48px 68px; color: var(--text-muted); font-size: 14px; }
+
+/* ── Duochrome test ── */
+.dc-wrap { padding: 28px 20px 48px; display: flex; justify-content: center; }
+.dc-card { background: var(--card); border-radius: 16px; box-shadow: 0 4px 28px rgba(0,0,0,0.09); padding: 36px 40px; width: min(780px, 92vw); }
+.dc-card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.dc-card-desc { font-size: 14px; color: #64748b; line-height: 1.65; margin-bottom: 24px; }
+.dc-toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.dc-toolbar label { font-size: 13px; color: #64748b; white-space: nowrap; }
+.dc-toolbar select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: white; cursor: pointer; color: var(--text); }
+.dc-panels { display: flex; gap: 10px; margin-bottom: 24px; }
+.dc-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px 20px; border-radius: 12px; gap: 14px; }
+.dc-panel-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; opacity: 0.75; color: white; }
+.dc-panel.dc-red  { background: #cc2222; }
+.dc-panel.dc-green { background: #1a8a3a; }
+.dc-letters { display: flex; align-items: center; }
+.dc-letter { font-family: 'Arial Black', 'Arial', sans-serif; font-weight: 900; color: #000; line-height: 1; user-select: none; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dc-choices { display: flex; gap: 10px; margin-bottom: 20px; }
+.dc-choice { flex: 1; padding: 11px 8px; border-radius: 10px; border: 2px solid transparent; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-align: center; }
+.dc-choice.ch-red   { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.dc-choice.ch-equal { background: #f1f5f9; color: #475569; border-color: var(--border); }
+.dc-choice.ch-green { background: #dcfce7; color: #166534; border-color: #86efac; }
+.dc-choice.ch-red:hover,   .dc-choice.ch-red.selected   { background: #dc2626; color: white; border-color: #dc2626; }
+.dc-choice.ch-equal:hover, .dc-choice.ch-equal.selected { background: #475569; color: white; border-color: #475569; }
+.dc-choice.ch-green:hover, .dc-choice.ch-green.selected { background: #16a34a; color: white; border-color: #16a34a; }
+.dc-result { display: none; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: 14px; line-height: 1.65; }
+.dc-result.show { display: block; }
+.dc-result.r-under { background: #fee2e2; border-left: 4px solid #dc2626; }
+.dc-result.r-over  { background: #dcfce7; border-left: 4px solid #16a34a; }
+.dc-result.r-ok    { background: #eff6ff; border-left: 4px solid var(--blue); }
+.dc-result strong  { font-weight: 700; }
+
+/* ── Astigmatism test ── */
+.astig-wrap { padding: 28px 20px 48px; display: flex; justify-content: center; }
+.astig-card { background: var(--card); border-radius: 16px; box-shadow: 0 4px 28px rgba(0,0,0,0.09); padding: 36px 40px; width: min(780px, 92vw); }
+.astig-card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.astig-card-desc  { font-size: 14px; color: #64748b; line-height: 1.65; margin-bottom: 28px; }
+
+.astig-body { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+
+.astig-dial-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.astig-dial-hint { font-size: 12px; color: var(--text-muted); text-align: center; max-width: 280px; line-height: 1.5; }
+
+#astigSvg { cursor: default; display: block; }
+
+.astig-none-btn {
+  padding: 10px 20px; border-radius: 10px; border: 1.5px solid var(--border);
+  background: white; color: #475569; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; width: 100%; text-align: center;
+}
+.astig-none-btn:hover { border-color: var(--blue); color: var(--blue); }
+.astig-none-btn.selected { background: var(--blue); color: white; border-color: var(--blue); }
+
+.astig-right { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 20px; }
+
+.astig-selected-info { font-size: 13px; color: #64748b; min-height: 20px; }
+.astig-selected-info strong { color: var(--text); }
+
+.astig-result { display: none; border-radius: 10px; padding: 16px 20px; font-size: 14px; line-height: 1.65; }
+.astig-result.show { display: block; }
+.astig-result.r-wtr    { background: #eff6ff; border-left: 4px solid var(--blue); }
+.astig-result.r-atr    { background: #fff7ed; border-left: 4px solid #f97316; }
+.astig-result.r-obliq  { background: #fdf4ff; border-left: 4px solid #a855f7; }
+.astig-result.r-none   { background: #f0fdf4; border-left: 4px solid #16a34a; }
+.astig-result strong   { font-weight: 700; }
+
+/* Explainer boxes (shared style) */
+.explainer { background: #f8fafc; border-radius: 10px; padding: 20px 24px; border: 1px solid var(--border); font-size: 13px; color: #64748b; line-height: 1.7; }
+.explainer h3 { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 14px; }
+.exp-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.exp-row:last-child { margin-bottom: 0; }
+.tag { padding: 2px 9px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.tag.t-red    { background: #fee2e2; color: #991b1b; }
+.tag.t-green  { background: #dcfce7; color: #166534; }
+.tag.t-eq     { background: #f1f5f9; color: #475569; }
+.tag.t-blue   { background: #eff6ff; color: #1d4ed8; }
+.tag.t-orange { background: #fff7ed; color: #c2410c; }
+.tag.t-purple { background: #fdf4ff; color: #7e22ce; }
+.tag.t-teal   { background: #f0fdf4; color: #166534; }
+
+/* ── Calibration modal ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: none; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(3px); }
+.modal-bg.open { display: flex; }
+.modal { background: white; border-radius: 16px; padding: 32px; width: 500px; max-width: 92vw; box-shadow: 0 20px 60px rgba(0,0,0,0.22); }
+.modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.modal p { font-size: 14px; color: #64748b; line-height: 1.65; margin-bottom: 28px; }
+.modal p strong { color: var(--text); }
+.ruler-wrap { position: relative; height: 54px; margin-bottom: 10px; padding-right: 16px; }
+.ruler-bar { height: 54px; background: var(--blue-light); border: 2px solid var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 60px; position: relative; }
+.ruler-ticks { position: absolute; bottom: 5px; left: 0; height: 10px; pointer-events: none; }
+.ruler-text { font-size: 13px; font-weight: 500; color: var(--blue); pointer-events: none; white-space: nowrap; z-index: 1; }
+.ruler-handle { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 28px; height: 44px; background: var(--blue); border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: ew-resize; color: white; font-size: 13px; box-shadow: 0 2px 10px rgba(37,99,235,0.45); z-index: 2; user-select: none; touch-action: none; }
+.ruler-info { font-size: 12px; color: var(--text-muted); text-align: center; height: 20px; margin-bottom: 24px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .header { padding: 0 14px; gap: 10px; height: auto; padding-top: 10px; padding-bottom: 10px; }
+  .header-right { gap: 8px; }
+  input[type=range] { width: 90px; }
+  .chart-card { padding: 24px 20px 24px 0; }
+  .dc-card, .astig-card { padding: 24px 20px; }
+  .dc-choices { flex-direction: column; }
+  .astig-body { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">标准对数视力表</div>
+  <div class="header-right">
+    <div class="dist-widget">
+      <label>检查距离</label>
+      <input type="range" id="distSlider" min="0.5" max="6" step="0.1" value="5">
+      <span class="dist-num"><span id="distVal">5.0</span> m</span>
+    </div>
+    <button class="btn" id="btnRandom" onclick="handleRandom()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      随机方向
+    </button>
+    <button class="btn" onclick="openCalib()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 5.34L3.93 6.75M19.07 19.07l-1.41-1.41M5.34 18.66l-1.41 1.41M22 12h-2M4 12H2M12 22v-2M12 4V2"/></svg>
+      校准屏幕
+    </button>
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab active" id="tabChart"      onclick="switchTab('chart')">视力表</button>
+  <button class="tab"        id="tabDuochrome"  onclick="switchTab('duochrome')">红绿验证</button>
+  <button class="tab"        id="tabAstig"      onclick="switchTab('astig')">散光检测</button>
+</div>
+
+<!-- Calibration banner -->
+<div class="calib-banner show" id="calibBanner">
+  尚未校准屏幕，视力表尺寸可能不准确。请点击
+  <a onclick="openCalib()">校准屏幕</a>以获得精确结果。
+</div>
+
+<!-- ══ View: Eye chart ══ -->
+<div id="viewChart">
+  <div class="chart-wrap">
+    <div class="chart-card">
+      <div class="chart-heading">国际标准对数视力表 &middot; 翻转 E 字视标</div>
+      <div id="chartRows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ View: Duochrome ══ -->
+<div id="viewDuochrome" style="display:none">
+  <div class="dc-wrap">
+    <div class="dc-card">
+      <div class="dc-card-title">红绿双色验光测试</div>
+      <div class="dc-card-desc">请戴上矫正眼镜，遮住一只眼睛，注视下方字母。<br>哪侧背景上的字母看起来更清晰、更黑？</div>
+      <div class="dc-toolbar">
+        <label>测试视力行</label>
+        <select id="dcVaSelect" onchange="renderDuochrome()">
+          <option value="1.6">5.2（1.6）</option>
+          <option value="1.25">5.1（1.25）</option>
+          <option value="1.0" selected>5.0（1.0）— 推荐</option>
+          <option value="0.8">4.9（0.8）</option>
+          <option value="0.63">4.8（0.63）</option>
+          <option value="0.5">4.7（0.5）</option>
+        </select>
+        <button class="btn" onclick="dcRefreshLetters()" style="margin-left:auto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          换一组字母
+        </button>
+      </div>
+      <div class="dc-panels">
+        <div class="dc-panel dc-red">
+          <div class="dc-panel-label">红色</div>
+          <div class="dc-letters" id="dcRedLetters"></div>
+        </div>
+        <div class="dc-panel dc-green">
+          <div class="dc-panel-label">绿色</div>
+          <div class="dc-letters" id="dcGreenLetters"></div>
+        </div>
+      </div>
+      <div class="dc-choices">
+        <button class="dc-choice ch-red"   onclick="dcSelect('red')">红色更清晰</button>
+        <button class="dc-choice ch-equal" onclick="dcSelect('equal')">两侧相同</button>
+        <button class="dc-choice ch-green" onclick="dcSelect('green')">绿色更清晰</button>
+      </div>
+      <div class="dc-result" id="dcResult"></div>
+      <div class="explainer">
+        <h3>原理说明</h3>
+        <div class="exp-row"><span class="tag t-red">红色更清晰</span><span><strong>欠矫正</strong>——焦点落在视网膜后方，近视需增加负度数，远视需减少正度数。</span></div>
+        <div class="exp-row"><span class="tag t-green">绿色更清晰</span><span><strong>过矫正</strong>——焦点落在视网膜前方，近视需减少负度数，远视需增加正度数。</span></div>
+        <div class="exp-row"><span class="tag t-eq">两侧相同</span><span><strong>矫正适当</strong>——焦点准确落在视网膜上，当前度数基本正确。</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ View: Astigmatism ══ -->
+<div id="viewAstig" style="display:none">
+  <div class="astig-wrap">
+    <div class="astig-card">
+      <div class="astig-card-title">散光检测</div>
+      <div class="astig-card-desc">
+        保持正常阅读距离，遮住一只眼睛，<strong>注视图表中心</strong>（不要刻意看某条线）。<br>
+        观察哪个方向的线条看起来最清晰或最黑，然后点击该线条或对应位置。
+      </div>
+
+      <div class="astig-body">
+        <!-- Dial -->
+        <div class="astig-dial-wrap">
+          <svg id="astigSvg" viewBox="-160 -160 320 320" width="300" height="300"></svg>
+          <div class="astig-dial-hint">点击图中最清晰的那组线条</div>
+          <button class="astig-none-btn" id="astigNoneBtn" onclick="astigSelectNone()">
+            所有线条清晰度相同（无散光）
+          </button>
+        </div>
+
+        <!-- Result side -->
+        <div class="astig-right">
+          <div class="astig-selected-info" id="astigSelInfo">尚未选择</div>
+          <div class="astig-result" id="astigResult"></div>
+          <div class="explainer">
+            <h3>散光类型说明</h3>
+            <div class="exp-row"><span class="tag t-blue">顺规散光</span><span>竖向线条（轴位约 90°，12/6 点钟方向）最清晰。最常见类型，多见于年轻人。</span></div>
+            <div class="exp-row"><span class="tag t-orange">逆规散光</span><span>横向线条（轴位约 0°/180°，3/9 点钟方向）最清晰。多见于中老年人。</span></div>
+            <div class="exp-row"><span class="tag t-purple">斜轴散光</span><span>斜向线条最清晰（轴位 30–60° 或 120–150°）。相对少见。</span></div>
+            <div class="exp-row"><span class="tag t-teal">无散光</span><span>所有线条清晰度一致，无明显散光。</span></div>
+            <div style="margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+              本测试仅作初步筛查参考，准确散光度数与轴位需由专业验光师通过综合验光确认。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Calibration Modal -->
+<div class="modal-bg" id="calibModal">
+  <div class="modal">
+    <h2>屏幕尺寸校准</h2>
+    <p>拖动右侧把手，使蓝色区域宽度与您的<strong>银行卡（或身份证）宽度</strong>完全相同。<br>银行卡标准宽度为 <strong>85.6 毫米</strong>。</p>
+    <div class="ruler-wrap">
+      <div class="ruler-bar" id="rulerBar">
+        <svg class="ruler-ticks" id="rulerTicks"></svg>
+        <span class="ruler-text" id="rulerText">← 拖动调整 →</span>
+      </div>
+      <div class="ruler-handle" id="rulerHandle">&#8644;</div>
+    </div>
+    <div class="ruler-info" id="rulerInfo"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeCalib()">取消</button>
+      <button class="btn btn-primary" onclick="applyCalib()">确认校准</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────
+const CARD_W_MM  = 85.6;
+const TAN5       = Math.tan(5 / 60 * Math.PI / 180);
+const VA_ROWS    = [
+  ['4.0',0.1,1],['4.1',0.125,2],['4.2',0.16,3],['4.3',0.2,4],
+  ['4.4',0.25,5],['4.5',0.32,6],['4.6',0.4,7],['4.7',0.5,8],
+  ['4.8',0.63,9],['4.9',0.8,10],['5.0',1.0,10],
+  ['5.1',1.25,10],['5.2',1.6,10],['5.3',2.0,10],
+];
+const E_DEGS     = [0, 90, 180, 270];
+const CHARS      = 'CDEFHNPRVZ';
+
+// ── Shared state ──────────────────────────────────────────────────────────
+let pxPerMm    = 96 / 25.4;
+let activeTab  = 'chart';
+
+// ── Utility ───────────────────────────────────────────────────────────────
+function letterHeightPx(distM, va) { return (distM * 1000 * TAN5 / va) * pxPerMm; }
+function snellen(va) { return '20/' + Math.round(20 / va); }
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  ['chart','duochrome','astig'].forEach(t => {
+    document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? '' : 'none';
+    document.getElementById('tab'  + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+  });
+  const btn = document.getElementById('btnRandom');
+  if (tab === 'astig') {
+    btn.style.visibility = 'hidden';
+  } else {
+    btn.style.visibility = '';
+    btn.querySelector('span') && (btn.querySelector('span').textContent = tab === 'chart' ? '随机方向' : '换一组字母');
+    // Rebuild button label simply:
+    const icon = btn.innerHTML.match(/<svg[\s\S]*?<\/svg>/)[0];
+    btn.innerHTML = icon + (tab === 'chart' ? ' 随机方向' : ' 换一组字母');
+    btn.onclick = handleRandom;
+  }
+  if (tab === 'duochrome') renderDuochrome();
+  if (tab === 'astig')     buildAstigDial(astigSelectedDeg);
+}
+
+function handleRandom() {
+  if (activeTab === 'chart')     { chartOrientations = makeOrientations(); renderChart(); }
+  else if (activeTab === 'duochrome') dcRefreshLetters();
+}
+
+// ── Eye chart ─────────────────────────────────────────────────────────────
+let chartOrientations = makeOrientations();
+function makeOrientations() { return VA_ROWS.map(([,,n]) => Array.from({length:n}, () => E_DEGS[Math.floor(Math.random()*4)])); }
+
+function renderChart() {
+  const dist = parseFloat(document.getElementById('distSlider').value);
+  const c    = document.getElementById('chartRows');
+  c.innerHTML = '';
+  let rendered = 0, sepDone = false;
+  VA_ROWS.forEach(([log, va, count], i) => {
+    const hPx = letterHeightPx(dist, va);
+    if (hPx > 300 || hPx < 4) return;
+    if (log === '5.0' && rendered > 0 && !sepDone) {
+      const sep = document.createElement('div'); sep.className = 'sep-row'; c.appendChild(sep); sepDone = true;
+    }
+    const row = document.createElement('div'); row.className = 'chart-row';
+    const lbl = document.createElement('div'); lbl.className = 'row-label';
+    lbl.innerHTML = `<div class="va-log">${log}</div><div class="va-snellen">${snellen(va)}</div>`;
+    row.appendChild(lbl);
+    const opts = document.createElement('div'); opts.className = 'optotypes';
+    opts.style.gap    = Math.max(2, hPx * 0.25) + 'px';
+    opts.style.height = (hPx * 1.35) + 'px';
+    chartOrientations[i].forEach(deg => {
+      const e = document.createElement('span'); e.className = 'optotype';
+      e.textContent = 'E';
+      e.style.cssText = `font-size:${hPx}px;width:${hPx}px;height:${hPx}px;transform:rotate(${deg}deg)`;
+      opts.appendChild(e);
+    });
+    row.appendChild(opts); c.appendChild(row); rendered++;
+  });
+  if (!rendered) c.innerHTML = '<div class="no-rows">当前距离下无可见行，请调整检查距离。</div>';
+}
+
+// ── Duochrome ─────────────────────────────────────────────────────────────
+let dcLetters = pickLetters(5);
+function pickLetters(n) { return CHARS.split('').sort(() => Math.random()-0.5).slice(0,n).join(''); }
+
+function renderDuochrome() {
+  const dist = parseFloat(document.getElementById('distSlider').value);
+  const va   = parseFloat(document.getElementById('dcVaSelect').value);
+  const hPx  = letterHeightPx(dist, va);
+  const gap  = Math.max(3, hPx * 0.18);
+  ['dcRedLetters','dcGreenLetters'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = ''; el.style.gap = gap + 'px';
+    dcLetters.split('').forEach(ch => {
+      const s = document.createElement('span'); s.className = 'dc-letter';
+      s.textContent = ch;
+      s.style.cssText = `font-size:${hPx}px;width:${hPx}px;height:${hPx*1.2}px`;
+      el.appendChild(s);
+    });
+  });
+}
+
+function dcRefreshLetters() {
+  dcLetters = pickLetters(5);
+  document.getElementById('dcResult').className = 'dc-result';
+  document.querySelectorAll('.dc-choice').forEach(b => b.classList.remove('selected'));
+  renderDuochrome();
+}
+
+function dcSelect(choice) {
+  document.querySelectorAll('.dc-choice').forEach(b => b.classList.remove('selected'));
+  document.querySelector({red:'ch-red',equal:'ch-equal',green:'ch-green'}[choice] && '.'+{red:'ch-red',equal:'ch-equal',green:'ch-green'}[choice]).classList.add('selected');
+  const el = document.getElementById('dcResult');
+  el.className = 'dc-result show';
+  if (choice === 'red') {
+    el.classList.add('r-under');
+    el.innerHTML = '<strong>红色更清晰 → 欠矫正（Under-corrected）</strong><br>焦点落在视网膜后方。近视度数不足，建议增加负度数；远视则需减少正度数。建议重新验光。';
+  } else if (choice === 'green') {
+    el.classList.add('r-over');
+    el.innerHTML = '<strong>绿色更清晰 → 过矫正（Over-corrected）</strong><br>焦点落在视网膜前方。近视度数偏高，建议减少负度数；远视则需增加正度数。建议重新验光。';
+  } else {
+    el.classList.add('r-ok');
+    el.innerHTML = '<strong>两侧相同 → 矫正适当（Well-corrected）</strong><br>焦点准确落在视网膜上，当前镜片度数基本正确。';
+  }
+}
+
+// ── Astigmatism dial ──────────────────────────────────────────────────────
+// dial angle convention: 0° = 12 o'clock (vertical), increases clockwise
+// optic axis = ((90 - dialDeg) % 180 + 180) % 180
+let astigSelectedDeg = null; // null = nothing selected
+
+const CLOCK_LABELS = [12,1,2,3,4,5,6,7,8,9,10,11];
+
+function dialDegToOpticAxis(d) {
+  return ((90 - d) % 180 + 180) % 180;
+}
+
+function buildAstigDial(selectedDeg) {
+  const svg = document.getElementById('astigSvg');
+  const R   = 118; // line half-length
+  const TR  = 126; // tick outer radius
+  const LR  = 144; // label radius
+
+  let html = '';
+
+  // Background circle
+  html += `<circle r="${R+2}" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>`;
+
+  // Lines at every 10° (18 lines through center)
+  for (let d = 0; d < 180; d += 10) {
+    const a    = (90 - d) * Math.PI / 180;
+    const cos  = Math.cos(a), sin = Math.sin(a);
+    const x1   =  cos * R, y1 = -sin * R;
+    const x2   = -cos * R, y2 =  sin * R;
+    const sel  = selectedDeg === d;
+    const col  = sel ? '#2563eb' : '#1e293b';
+    const w    = sel ? 3 : 1.5;
+    const op   = sel ? 1 : 0.85;
+    // Invisible wide hitbox
+    html += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"
+      stroke="transparent" stroke-width="16" class="astig-hit" data-deg="${d}" style="cursor:pointer"/>`;
+    // Visible line
+    html += `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"
+      stroke="${col}" stroke-width="${w}" opacity="${op}" pointer-events="none"/>`;
+  }
+
+  // Center dot
+  html += `<circle r="3.5" fill="#94a3b8"/>`;
+
+  // Tick marks & clock numbers every 30°
+  for (let i = 0; i < 12; i++) {
+    const d    = i * 30;
+    const a    = (90 - d) * Math.PI / 180;
+    const cos  = Math.cos(a), sin = Math.sin(a);
+    // Long tick at clock position
+    html += `<line x1="${(cos*(R+3)).toFixed(1)}" y1="${(-sin*(R+3)).toFixed(1)}"
+                   x2="${(cos*TR).toFixed(1)}"    y2="${(-sin*TR).toFixed(1)}"
+      stroke="#94a3b8" stroke-width="1.2"/>`;
+    // Short ticks at ±10° between clock positions
+    for (const offset of [-20, -10, 10, 20]) {
+      const a2   = (90 - d - offset) * Math.PI / 180;
+      const c2   = Math.cos(a2), s2 = Math.sin(a2);
+      const trr  = R + (Math.abs(offset) === 10 ? 5 : 3);
+      html += `<line x1="${(c2*(R+2)).toFixed(1)}" y1="${(-s2*(R+2)).toFixed(1)}"
+                     x2="${(c2*trr).toFixed(1)}"   y2="${(-s2*trr).toFixed(1)}"
+        stroke="#cbd5e1" stroke-width="1"/>`;
+    }
+    // Number label
+    const lx = (cos * LR).toFixed(1);
+    const ly = (-sin * LR).toFixed(1);
+    html += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central"
+      font-size="13" fill="#64748b" font-family="system-ui,sans-serif"
+      pointer-events="none">${CLOCK_LABELS[i]}</text>`;
+  }
+
+  svg.innerHTML = html;
+
+  // Attach click handlers to hitboxes
+  svg.querySelectorAll('.astig-hit').forEach(el => {
+    el.addEventListener('click', () => {
+      const deg = parseInt(el.dataset.deg);
+      astigSelectedDeg = deg;
+      document.getElementById('astigNoneBtn').classList.remove('selected');
+      buildAstigDial(deg);
+      showAstigResult(deg);
+    });
+  });
+}
+
+function astigSelectNone() {
+  astigSelectedDeg = null;
+  document.getElementById('astigNoneBtn').classList.add('selected');
+  buildAstigDial(null);
+  const info = document.getElementById('astigSelInfo');
+  info.innerHTML = '';
+  const el = document.getElementById('astigResult');
+  el.className = 'astig-result show r-none';
+  el.innerHTML = '<strong>所有线条清晰度相同 → 未检测到明显散光</strong><br>各方向线条均等清晰，无需散光矫正。如有疑虑，可前往医院做综合验光确认。';
+}
+
+function showAstigResult(dialDeg) {
+  const axis      = dialDegToOpticAxis(dialDeg);
+  const clockHour = Math.round(dialDeg / 30);
+  const oppHour   = clockHour === 0 ? 6 : (clockHour + 6) % 12 || 12;
+  const mainHour  = clockHour === 0 ? 12 : clockHour;
+
+  // Determine clock position label for the selected line
+  const infoEl = document.getElementById('astigSelInfo');
+  infoEl.innerHTML = `已选：<strong>${mainHour}—${oppHour} 点钟方向</strong>，对应轴位约 <strong>${axis}°</strong>`;
+
+  const el = document.getElementById('astigResult');
+  el.className = 'astig-result show';
+
+  if (axis >= 60 && axis <= 120) {
+    // With-the-rule
+    el.classList.add('r-wtr');
+    el.innerHTML = `<strong>疑似顺规散光（With-the-rule）</strong><br>
+      竖向/近竖向线条（轴位 ${axis}°）最清晰，说明垂直子午线屈光力最强。
+      这是最常见的散光类型，通常可用 ${axis}° 轴位的柱镜矫正。`;
+  } else if (axis <= 30 || axis >= 150) {
+    // Against-the-rule
+    el.classList.add('r-atr');
+    el.innerHTML = `<strong>疑似逆规散光（Against-the-rule）</strong><br>
+      横向/近横向线条（轴位 ${axis}°）最清晰，说明水平子午线屈光力最强。
+      多见于中老年人，通常可用 ${axis}° 轴位的柱镜矫正。`;
+  } else {
+    // Oblique
+    el.classList.add('r-obliq');
+    el.innerHTML = `<strong>疑似斜轴散光（Oblique astigmatism）</strong><br>
+      斜向线条（轴位 ${axis}°）最清晰，说明斜向子午线屈光力最强。
+      斜轴散光较少见，需由专业验光师精确测定轴位后配镜矫正。`;
+  }
+}
+
+// ── Distance slider ───────────────────────────────────────────────────────
+document.getElementById('distSlider').addEventListener('input', function () {
+  document.getElementById('distVal').textContent = parseFloat(this.value).toFixed(1);
+  if (activeTab === 'chart')      renderChart();
+  else if (activeTab === 'duochrome') renderDuochrome();
+});
+
+// ── Calibration ───────────────────────────────────────────────────────────
+let rulerPx = 240, drag = false, dragX0, dragW0;
+
+function openCalib() { syncRuler(); document.getElementById('calibModal').classList.add('open'); }
+function closeCalib() { document.getElementById('calibModal').classList.remove('open'); }
+function applyCalib() {
+  pxPerMm = rulerPx / CARD_W_MM;
+  document.getElementById('calibBanner').classList.remove('show');
+  closeCalib();
+  renderChart();
+  if (activeTab === 'duochrome') renderDuochrome();
+}
+
+function syncRuler() {
+  const bar = document.getElementById('rulerBar');
+  bar.style.width = rulerPx + 'px';
+  document.getElementById('rulerText').textContent = rulerPx.toFixed(0) + ' px';
+  document.getElementById('rulerInfo').textContent =
+    `${(rulerPx/CARD_W_MM).toFixed(2)} px/mm · 宽度 ${rulerPx.toFixed(0)} px = 85.6 mm`;
+  document.getElementById('rulerHandle').style.left = rulerPx + 'px';
+  drawTicks(rulerPx, CARD_W_MM);
+}
+
+function drawTicks(w, totalMm) {
+  const svg = document.getElementById('rulerTicks');
+  const ppm = w / totalMm;
+  let h = '';
+  for (let mm = 10; mm < totalMm; mm += 10) {
+    const x = mm * ppm, ht = mm % 50 === 0 ? 7 : 4;
+    h += `<line x1="${x}" y1="0" x2="${x}" y2="${ht}" stroke="#93c5fd" stroke-width="1"/>`;
+    if (mm % 50 === 0) h += `<text x="${x}" y="9" text-anchor="middle" font-size="7" fill="#93c5fd">${mm}</text>`;
+  }
+  svg.innerHTML = h;
+  svg.setAttribute('viewBox', `0 0 ${w} 10`);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', '10');
+}
+
+const rulerHandle = document.getElementById('rulerHandle');
+rulerHandle.addEventListener('mousedown', e => { drag=true; dragX0=e.clientX; dragW0=rulerPx; e.preventDefault(); });
+rulerHandle.addEventListener('touchstart', e => { drag=true; dragX0=e.touches[0].clientX; dragW0=rulerPx; e.preventDefault(); }, {passive:false});
+document.addEventListener('mousemove', e => { if (!drag) return; rulerPx=Math.max(50,Math.min(680,dragW0+e.clientX-dragX0)); syncRuler(); });
+document.addEventListener('touchmove', e => { if (!drag) return; rulerPx=Math.max(50,Math.min(680,dragW0+e.touches[0].clientX-dragX0)); syncRuler(); e.preventDefault(); }, {passive:false});
+document.addEventListener('mouseup',  () => { drag=false; });
+document.addEventListener('touchend', () => { drag=false; });
+document.getElementById('calibModal').addEventListener('click', function(e) { if (e.target===this) closeCalib(); });
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderChart();
+buildAstigDial(null);
+</script>
+</body>
+</html>
